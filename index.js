@@ -3,7 +3,7 @@ import component from './src/vuetify-user-registration.vue';
 export function install(Vue) {
   if (install.installed) return;
   install.installed = true;
-  Vue.component('DateHidden', component);
+  Vue.component('VuetifyUserRegistration', component);
 }
 
 const plugin = {
