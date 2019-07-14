@@ -10,7 +10,7 @@ vue/vuetify с гибикими настройками
 
 Импорт компонента: 
 ```javascript  
-import userRegistration from 'user-registration'
+import userRegistration from 'vuetify-user-registration'
 ```
 Регистрация компонента:
 ```javascript 
@@ -39,8 +39,8 @@ options: {
       url : "http://192.168.0.83:27333/api/v1/add_user",
       login: {name:"login", label:"Имя пользователя", max: 14, character:true},
       password: {name:"password", label:"Password",  min: 6},
-      surname: {name:"fam", label:"Фамилия", required: true, min:2, max:15},
-      name: {name:"fam", label:"Имя", min:2, max:10},
+      surname: {name:"surname", label:"Фамилия", required: true, min:2, max:15},
+      name: {name:"name", label:"Имя", min:2, max:10},
       birthDay: {name:"birth_day", label:"Дата рождения"},
       email: {name:"email", label: "Электронная почта", confirm: true, required: true},
       phone: {name:"phone", label:"Мобильный телефон"}
