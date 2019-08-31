@@ -1,10 +1,10 @@
 <template>
     <v-form ref="form">
         <v-snackbar
-                v-model="snackbar.show"
-                :color="snackbar.color"
-                :multi-line=true
-                :timeout="7000"
+            v-model="snackbar.show"
+            :color="snackbar.color"
+            :multi-line=true
+            :timeout="7000"
         >{{snackbar.text}}</v-snackbar>
         <v-dialog v-model="show" persistent :max-width="maxWidth" height="50px">
             <v-card>
@@ -110,7 +110,8 @@
                 type: Boolean
             },
             options: {
-                type: Object
+                type: Object,
+                required: true
             },
             maxWidth: {
                 type: String
@@ -305,6 +306,10 @@
                     }
 
                 } catch (e) {
+                    if (e && e.response && e.response.data && e.response.data.error) {
+                        this.showSnackBar(`не удалось сохранить пользователя. Ошибка: ${e.response.data.error}`)
+                        return
+                    }
                     this.showSnackBar(`не удалось сохранить пользователя. Ошибка: ${e}`)
                 }
 

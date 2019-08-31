@@ -1,6 +1,6 @@
 {
   "name": "vuetify-user-registration",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Компонент формы диалогового окна регистрации пользователей, использующий связку vue/vuetify",
   "main": "index.js",
   "scripts": {
