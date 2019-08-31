@@ -70,6 +70,18 @@
                                         </a>
                                     </v-flex>
                                 </template>
+                                <template v-if = "confirmPhone.url">
+                                    <v-flex xs12>
+                                        <v-label text-color ="success">На ваш телефон выслано sms c кодом подтверждения</v-label>
+                                    </v-flex>
+                                    <v-flex xs6>
+                                        <v-text-field v-model = "confirmPhone.code" label = 'Код подтверждения'></v-text-field>
+                                    </v-flex>
+                                    <v-flex xs6>
+                                        <v-btn @click="onConfirmPhone" color="primary">Подтвердить</v-btn>
+                                    </v-flex>
+                                    <v-label v-show = "confirmPhone.text">{{confirmPhone.text}}</v-label>
+                                </template>
                             </v-layout>
                         </form>
                     </v-container>
@@ -78,7 +90,7 @@
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn color="primary" flat @click="onClosed">Закрыть</v-btn>
-                    <v-btn color="primary" flat @click="onoptions">Сохранить</v-btn>
+                    <v-btn color="primary" flat @click="onSave">Сохранить</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -108,6 +120,16 @@
             }
         },
         computed: {
+            getEmail() {
+                if (!this.email) {
+                    return ""
+                }
+                const arr = this.email.split('@')
+                if (!arr || arr.length < 2) {
+                    return ""
+                }
+                return this.mapEmail.get(arr[1])
+            },
             nameForm() {
                 if (this.options && this.options.nameForm) {
                     return this.options.nameForm
@@ -207,7 +229,37 @@
             onClosed() {
                 this.$emit('closed', false)
             },
-            async onoptions() {
+            async onConfirmPhone() {
+                if (!this.confirmPhone.url) {
+                    this.showSnackBar("Сбой при отправке кода подтверждения. url для server пустой")
+                    return
+                }
+                if (!this.confirmPhone.code) {
+                    this.showSnackBar("Код подтверждения не отправлен. Заполните поле Код подтверждения", "warning")
+                    return
+                }
+                try {
+                    const data = new FormData()
+                    data.append("code_phone", this.confirmPhone.code)
+                    const res = await axios.post(`${this.confirmPhone.url}`, data)
+                    if (res && res.data && res.data.error) {
+                        this.showSnackBar(res.data.error, "warning")
+                        return
+                    }
+                    this.confirmPhone.text = `Телефон успешно подтвержден`
+                    return
+                } catch (e) {
+                    if (e && e.response && e.response.data && e.response.status) {
+                        if (e.response.status === 401 || e.response.status === 403) {
+                            this.confirmPhone.text = `Не удалось подтвердить телефон: неверный код подтверждения`
+                        }
+                        return
+                    }
+                    this.showSnackBar(`не удалось подтвердить телефон. Ошибка: ${e}`)
+                }
+                this.onClosed()
+            },
+            async onSave() {
                 if (!this.options || !this.options.url) {
                     return
                 }
@@ -229,15 +281,28 @@
                         return
                     }
                     this.snackbar.show = false
+
+                    //Для электронной почты
+                    let urlEmail = this.getEmail
                     if (this.options.email && this.options.email.confirm) {
                         this.confirmEmail.showText = true
-                        if (res && res.data && res.data.url) {
+                        if (urlEmail) {
                             this.confirmEmail.showBtn = true
-                            this.confirmEmail.url = res.data.url
+                            this.confirmEmail.url = urlEmail
+                        } else {
+                            this.confirmEmail.showBtn = false
+                            this.confirmEmail.url = ""
                         }
-                        return
                     }
-                    this.onClosed()
+                    // Для телефона
+                    if (this.options.phone && this.options.phone.confirmUrl) {
+                        this.confirmPhone.url = this.options.phone.confirmUrl
+                    }
+
+                    // Проверка на автоматическое закрытие формы
+                    if (!this.confirmEmail.showText && !this.confirmPhone.url) {
+                        this.onClosed()
+                    }
 
                 } catch (e) {
                     this.showSnackBar(`не удалось сохранить пользователя. Ошибка: ${e}`)
@@ -257,10 +322,43 @@
                     text: "",
                     color: ""
                 },
+                mapEmail : new Map([
+                    ["mail.ru",        "https://e.mail.ru/"],
+                    ["bk.ru",         "https://e.mail.ru/"],
+                    ["list.ru",        "https://e.mail.ru/"],
+                    ["inbox.ru",       "https://e.mail.ru/"],
+                    ["yandex.ru",      "https://mail.yandex.ru/"],
+                    ["ya.ru",          "https://mail.yandex.ru/"],
+                    ["yandex.ua",      "https://mail.yandex.ua/"],
+                    ["yandex.by",      "https://mail.yandex.by/"],
+                    ["yandex.kz",      "https://mail.yandex.kz/"],
+                    ["yandex.com",     "https://mail.yandex.com/"],
+                    ["gmail.com",      "https://mail.google.com/"],
+                    ["googlemail.com", "https://mail.google.com/"],
+                    ["outlook.com",    "https://mail.live.com/"],
+                    ["hotmail.com",    "https://mail.live.com/"],
+                    ["live.ru",        "https://mail.live.com/"],
+                    ["live.com",       "https://mail.live.com/"],
+                    ["me.com",         "https://www.icloud.com/"],
+                    ["icloud.com",     "https://www.icloud.com/"],
+                    ["rambler.ru",     "https://mail.rambler.ru/"],
+                    ["yahoo.com",      "https://mail.yahoo.com/"],
+                    ["ukr.net",        "https://mail.ukr.net/"],
+                    ["i.ua",           "http://mail.i.ua/"],
+                    ["bigmir.net",     "http://mail.bigmir.net/"],
+                    ["tut.by",         "https://mail.tut.by/"],
+                    ["inbox.lv",       "https://www.inbox.lv/"],
+                    ["mail.kz",        "http://mail.kz/"]
+                ]),
                 confirmEmail: {
                     showText: false,
                     showBtn: false,
                     url: "",
+                },
+                confirmPhone: {
+                    url: "",
+                    code: "",
+                    text: ""
                 },
                 login:"",
                 password: {
