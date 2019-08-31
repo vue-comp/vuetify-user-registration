@@ -256,6 +256,10 @@
                         }
                         return
                     }
+                    if (e && e.response && e.response.data && e.response.data.error) {
+                        this.showSnackBar(`не удалось подтвердить телефон. Ошибка: ${e.response.data.error}`)
+                        return
+                    }
                     this.showSnackBar(`не удалось подтвердить телефон. Ошибка: ${e}`)
                 }
                 this.onClosed()
